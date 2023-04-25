@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+}
+
+group 'org.example'
+version '1.0'
+
+compileJava {
+    //options.incremental = true
+    options.fork = true
+    options.forkOptions.executable = "C:\\Program Files\\Zulu\\zulu-8\\bin\\javac"
+    options.failOnError = false
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // This dependency is used by the application.
+    implementation 'com.google.guava:guava:29.0-jre'
+    // For running spark basics
+    implementation 'org.apache.spark:spark-sql_2.12:3.0.1'
+    implementation 'org.apache.hadoop:hadoop-aws:3.3.5'
+    implementation 'com.amazonaws:aws-java-sdk:1.12.436'
+    // Use JUnit test framework
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+test {
+    useJUnitPlatform()
+}
