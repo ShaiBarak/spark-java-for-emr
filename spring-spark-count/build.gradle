@@ -1,0 +1,128 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '2.7.10'
+	id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+}
+
+group = 'com.cyberark.epm.emr'
+
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+repositories {
+	mavenCentral()
+}
+configurations {
+	all {
+		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+		exclude group: 'org.apache.hadoop', module: 'hadoop-aws'
+		exclude group: 'org.apache.spark', module: 'spark-core'
+	}
+}
+
+
+
+dependencies {
+	// For running spark basics
+	//implementation 'org.apache.spark:spark-sql_2.12:3.3.2'
+	implementation 'org.apache.spark:spark-core_2.13:3.3.2'
+	//implementation 'org.scala-lang:scala-library:2.12.0'
+	implementation 'org.apache.hadoop:hadoop-aws:3.3.5'
+	implementation 'com.amazonaws:aws-java-sdk:1.12.436'
+	implementation 'org.springframework.boot:spring-boot-starter'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+//tasks.register('uberJar', Jar) {
+//	zip64 = true
+//	archiveClassifier = 'uber'
+//	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+//	from sourceSets.main.output
+//
+//	dependsOn configurations.runtimeClasspath
+//	from {
+//		configurations.runtimeClasspath.findAll {
+//				it.name.endsWith('jar')
+//				!it.name.contains("org.apache.spark:spark-core")
+//                !it.name.contains("org.apache.hadoop:hadoop-aws")
+//		}.collect { zipTree(it) }
+//	}
+//}
+
+tasks.register('uberJar', Jar) {
+	zip64 = true
+	archiveClassifier = 'uber'
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	archiveFileName = "${project.name}-${project.version}-jar-with-dependencies.jar"
+
+	manifest {
+		attributes 'Main-Class': 'com.cyberark.emr.SpringSparkCountApplication'
+	}
+
+	dependsOn configurations.runtimeClasspath
+	from {
+		configurations.runtimeClasspath.findAll {
+			it.name.endsWith('jar')
+			!it.name.contains("org.apache.spark:spark-core")
+			!it.name.contains("org.apache.hadoop:hadoop-aws")
+		}.collect {  it.isDirectory() ? it : zipTree(it) }
+	}
+}
+
+jar {
+	zip64 = true
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	archiveFileName = "${project.name}-${project.version}-jar-with-dependencies.jar"
+	manifest {
+		attributes(
+				'Main-Class': 'com.cyberark.emr.SpringSparkCountApplication'
+		)
+	}
+	dependsOn configurations.runtimeClasspath
+	from {
+		configurations.runtimeClasspath.findAll {
+			it.name.endsWith('jar')
+		}.collect {  it.isDirectory() ? it : zipTree(it) }
+	}
+}
+
+//bootJar {
+//	exclude("spring-boot-starter")
+//	exclude("spring-boot-starter-logging")
+//	exclude("hadoop-aws")
+//	exclude("spark-core")
+//}
+
+tasks.bootJar {
+	archiveFileName = 'appEmr.jar'
+	mainClass = 'com.cyberark.emr.SpringSparkCountApplication'
+	exclude("spring-boot-starter")
+	exclude("spring-boot-starter-logging")
+	exclude("hadoop-aws")
+	exclude("spark-core")
+}
+
+//
+//task fatJar(type: Jar) {
+//	zip64 = true
+//	manifest {
+//		attributes (
+//				'Implementation-Title': "EPM EMR",
+//		)
+//	}
+//	dependencies.findAll { file ->
+//		// file is of type java.io.File
+//		// when true, jar file is unziped and added
+//		file.name != "org.apache.spark:spark-core_2.13-3.3.2.jar"
+//		file.name != "org.apache.hadoop:hadoop-aws-3.3.5.jar"
+//	}.sort { it.name }
+//			.collect { file ->
+//				logger.info("Including file: ${file.name}")
+//				file.isDirectory() ? file : zipTree(file)
+//			}
+//	with jar
+//}
